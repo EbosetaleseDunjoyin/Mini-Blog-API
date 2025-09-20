@@ -49,11 +49,9 @@
             const titleError = document.getElementById('titleError');
             const bodyError = document.getElementById('bodyError');
             
-            // Clear previous errors
             titleError.style.display = 'none';
             bodyError.style.display = 'none';
-            
-            // Disable submit button
+
             submitBtn.disabled = true;
             submitBtn.textContent = 'Creating...';
             
@@ -72,17 +70,14 @@
                 );
                 
                 showNotification('Post created successfully!', 'success');
-                
-                // Redirect to dashboard after a short delay
+
                 setTimeout(() => {
                     window.location.href = '{{ route("dashboard") }}';
                 }, 1000);
                 
             } catch (error) {
-                // Handle validation errors
                 if (error.message.includes('Validation')) {
                     try {
-                        // Try to parse the error response for validation details
                         const errorResponse = await fetch(`${blogAPI.baseURL}/posts`, {
                             method: 'POST',
                             headers: {
@@ -99,7 +94,6 @@
                         
                         const errorData = await errorResponse.json();
                         
-                        // Display field-specific errors
                         if (errorData.errors) {
                             if (errorData.errors.title) {
                                 titleError.textContent = errorData.errors.title[0];
@@ -124,13 +118,13 @@
                     showNotification(`Error creating post: ${error.message}`, 'error');
                 }
             } finally {
-                // Re-enable submit button
+                document.getElementById('title').value = '';
+                document.getElementById('body').value = '';
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Create Post';
             }
         });
 
-        // Auto-save draft to localStorage (optional feature)
         function saveDraft() {
             const title = document.getElementById('title').value;
             const body = document.getElementById('body').value;
@@ -148,19 +142,18 @@
                     document.getElementById('title').value = title || '';
                     document.getElementById('body').value = body || '';
                 } catch (e) {
-                    // Ignore invalid draft
+                    
                 }
             }
         }
 
-        // Load draft on page load
+
         document.addEventListener('DOMContentLoaded', loadDraft);
 
-        // Save draft on input
+
         document.getElementById('title').addEventListener('input', saveDraft);
         document.getElementById('body').addEventListener('input', saveDraft);
 
-        // Clear draft on successful submission
         document.addEventListener('postCreated', () => {
             localStorage.removeItem('postDraft');
         });

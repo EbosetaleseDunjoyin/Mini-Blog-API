@@ -46,18 +46,16 @@
             const loading = document.getElementById('loading');
             const formContainer = document.getElementById('editFormContainer');
             const errorContainer = document.getElementById('errorContainer');
-            
-            // Get post ID from URL
+  
             const pathSegments = window.location.pathname.split('/');
-            postId = pathSegments[pathSegments.length - 1];
+            postId = pathSegments[pathSegments.length - 2];
             
             if (!postId || isNaN(postId)) {
                 loading.style.display = 'none';
                 errorContainer.style.display = 'block';
                 return;
             }
-            
-            // Check if user is authenticated
+ 
             if (!blogAPI.token) {
                 loading.style.display = 'none';
                 errorContainer.innerHTML = `
@@ -77,11 +75,9 @@
                 
                 if (response.data) {
                     const post = response.data;
-                    
-                    // Update page title
+  
                     document.title = `Edit ${post.title} - Mini Blog`;
-                    
-                    // Populate form
+  
                     document.getElementById('title').value = post.title;
                     document.getElementById('body').value = post.body;
                     
@@ -90,6 +86,7 @@
                     errorContainer.style.display = 'block';
                 }
             } catch (error) {
+                console.error(error);
                 loading.style.display = 'none';
                 
                 if (error.message.includes('Unauthenticated')) {
@@ -127,12 +124,10 @@
             const bodyInput = document.getElementById('body');
             const titleError = document.getElementById('titleError');
             const bodyError = document.getElementById('bodyError');
-            
-            // Clear previous errors
+
             titleError.style.display = 'none';
             bodyError.style.display = 'none';
-            
-            // Disable submit button
+
             submitBtn.disabled = true;
             submitBtn.textContent = 'Updating...';
             
@@ -145,16 +140,17 @@
                 
                 showNotification('Post updated successfully!', 'success');
                 
-                // Redirect to dashboard after a short delay
+
                 setTimeout(() => {
                     window.location.href = '{{ route("dashboard") }}';
                 }, 1000);
                 
             } catch (error) {
-                // Handle validation errors
+                console.error(error);
+
                 if (error.message.includes('Validation')) {
                     try {
-                        // Try to parse the error response for validation details
+  
                         const errorResponse = await fetch(`${blogAPI.baseURL}/posts/${postId}`, {
                             method: 'PUT',
                             headers: {
@@ -185,6 +181,7 @@
                             showNotification(errorData.message || 'Validation failed', 'error');
                         }
                     } catch (parseError) {
+                        console.error(parseError);
                         showNotification('Please check your input and try again', 'error');
                     }
                 } else if (error.message.includes('Unauthenticated')) {
@@ -204,7 +201,6 @@
             }
         });
 
-        // Load post when page loads
         document.addEventListener('DOMContentLoaded', loadPost);
     </script>
 @endsection

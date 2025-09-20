@@ -14,10 +14,9 @@ Route::get('/register', [PageController::class, 'registerForm'])->name('register
 
 
 // Protected routes
-
 Route::get('/dashboard', [PageController::class, 'dashboard'])->name('dashboard');
 Route::get('/create', [PageController::class, 'createForm'])->name('blog.create');
-Route::get('/posts/{post}/edit', [PageController::class, 'editForm'])->name('blog.edit');
+Route::get('/post/{post}/edit', [PageController::class, 'editForm'])->name('blog.edit');
 
 
 

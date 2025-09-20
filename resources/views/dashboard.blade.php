@@ -107,8 +107,8 @@
                     ${escapeHtml(truncatedBody)}
                 </div>
                 <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-                    <a href="/blog/${post.id}" class="btn btn-secondary">View</a>
-                    <a href="/blog/edit/${post.id}" class="btn">Edit</a>
+                    <a href="/post/${post.id}" class="btn btn-secondary">View</a>
+                    <a href="/post/${post.id}/edit" class="btn">Edit</a>
                     <button type="button" class="btn btn-danger" onclick="deletePost(${post.id})">Delete</button>
                 </div>
             `;

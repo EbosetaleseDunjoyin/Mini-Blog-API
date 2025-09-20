@@ -48,6 +48,25 @@ class PostController extends Controller
 
         return $this->successResponse("Posts retrieved successfully", $posts);
     }
+
+     /**
+     * Display single post.
+     * 
+     * @param Request $request
+     * @param Post $post
+     * @response array{
+     *  "status": boolean,
+     *  "message": "Post retrieved successfully",
+     *   "data": Post
+     * }
+     * @return JsonResponse
+     */
+    public function showPost(Request $request, Post $post): JsonResponse
+    {
+        $post->load('user:id,name');
+        return $this->successResponse("Post retrieved successfully", $post);
+    }
+
     /**
      * Display the user's posts.
      * @param Request $request
@@ -139,7 +158,7 @@ class PostController extends Controller
     public function show(Request $request, Post $post): JsonResponse
     {
         $this->authorize('view', $post);
-        $post->load('user:id,name');
+        $post->load('user');
         return $this->successResponse("Post retrieved successfully", $post);
     }
 
