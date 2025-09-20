@@ -5,7 +5,6 @@
   <a href="#"><img src="https://img.shields.io/badge/PHP-8.2-777BB4.svg?logo=php" alt="PHP"></a>
   <a href="#"><img src="https://img.shields.io/badge/Laravel-12-FF2D20.svg?logo=laravel" alt="Laravel"></a>
   <a href="#"><img src="https://img.shields.io/badge/Laravel_Sanctum-4.0-4FC08D.svg" alt="Sanctum"></a>
-  <a href="#"><img src="https://img.shields.io/badge/SQLite-003B57.svg?logo=sqlite" alt="SQLite"></a>
   <a href="#"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
 </p>
 
@@ -58,7 +57,7 @@ Mini Blog API is a comprehensive RESTful API for blog management built with Lara
 
 - **Laravel 12** - PHP Framework with latest features
 - **Laravel Sanctum 4.0** - API Authentication
-- **SQLite** - Lightweight database for development
+- **MySql** - Database for development
 - **Pest** - Modern PHP testing framework
 - **Faker** - Realistic test data generation
 
@@ -112,7 +111,7 @@ Mini Blog API is a comprehensive RESTful API for blog management built with Lara
    php artisan key:generate
    ```
 
-5. **Configure database **
+5. **Configure database**
 
    The project uses MySql by default.
 
@@ -261,24 +260,6 @@ For production deployment:
    ```
 
 4. **Set up HTTPS** for secure API token transmission
-
-
-## 🔄 Development Workflow
-
-1. **Start development server**
-   ```bash
-   php artisan serve
-   ```
-
-2. **Watch for frontend changes**
-   ```bash
-   npm run dev
-   ```
-
-3. **Reset database with fresh data**
-   ```bash
-   php artisan migrate:fresh --seed
-   ```
 
 ## 📝 License
 
