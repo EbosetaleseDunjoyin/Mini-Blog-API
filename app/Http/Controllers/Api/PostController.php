@@ -2,121 +2,195 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use Exception;
 use App\Models\Post;
+use App\Traits\ApiResponder;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use App\Services\PostService;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class PostController extends Controller
 {
+    use ApiResponder, AuthorizesRequests;
+
+    public function __construct(
+         private PostService $postService
+    )
+    {
+    }
+
+     /**
+     * Display a listing of all posts (public access).
+     * @unauthenticated
+     * @param Request $request
+     * @response array{
+     *  "status": boolean,
+     *  "message": "Posts retrieved successfully",
+     *   "data": Post[]
+     * }
+     */
+    public function getPosts(Request $request): JsonResponse
+    {
+        $posts = Post::with('user:id,name')->orderBy('created_at', 'desc')
+            ->when($request->has('search'), function ($query) use ($request) {
+                $search = $request->get('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhere('body', 'like', "%{$search}%");
+                });
+            })->paginate(10);
+
+
+        return $this->successResponse("Posts retrieved successfully", $posts);
+    }
     /**
-     * Display a listing of the user's posts.
+     * Display the user's posts.
+     * @param Request $request
+     * @response array{
+     *  "status": boolean,
+     *  "message": "User posts retrieved successfully",
+     *   "data": [
+     *     {
+     *       "id": 1,
+     *       "title": "Post Title",
+     *       "body": "Post Body",
+     *       "user_id": 1,
+     *       "created_at": "2023-01-01T00:00:00Z",
+     *       "updated_at": "2023-01-01T00:00:00Z"
+     *     }
+     *   ]
+     * }
+     * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
         $posts = $request->user()->posts()
+            ->when($request->has('search'), function ($query) use ($request) {
+                $search = $request->get('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhere('body', 'like', "%{$search}%");
+                });
+            })
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10);
 
-        return response()->json([
-            'posts' => $posts
-        ]);
+        return $this->successResponse("User posts retrieved successfully", $posts);
     }
 
     /**
-     * Store a newly created post.
+     * Store a post.
+     * @param Request $request
+     * @response array{
+     *  "status": boolean,
+     *  "message": "Post created successfully",
+     *   "data": {
+     *       "id": 1,
+     *       "title": "Post Title",
+     *       "body": "Post Body",
+     *       "user_id": 1,
+     *       "created_at": "2023-01-01T00:00:00Z",
+     *       "updated_at": "2023-01-01T00:00:00Z"
+     *     }
+     * }
+     * @return JsonResponse
      */
     public function store(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
+        
+        $request->validate([
             'title' => 'required|string|max:255',
             'body' => 'required|string',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
-        }
+        try {
+           DB::beginTransaction();
+           $data = $request->only(['title', 'body']);
+           $data['user_id'] = $request->user()->id;
+           $post = $this->postService->createPost( $data);
+           DB::commit();
+           return $this->successResponse("Post created successfully", $post, 201);
+       } catch (Exception $e) {
+           DB::rollBack();
+           Log::error('Post creation error: ' . $e->getMessage());
+           return $this->errorResponse("Failed to create post", 500);
+       }
 
-        $post = $request->user()->posts()->create([
-            'title' => $request->title,
-            'body' => $request->body,
-        ]);
-
-        return response()->json([
-            'message' => 'Post created successfully',
-            'post' => $post->load('user')
-        ], 201);
+        
     }
 
     /**
      * Display the specified post.
+     * 
+     * @param Request $request
+     * @param Post $post
+     * @response array{
+     *  "status": boolean,
+     *  "message": "Post retrieved successfully",
+     *   "data": Post
+     * }
+     * @return JsonResponse
      */
     public function show(Request $request, Post $post): JsonResponse
     {
-        // Check if the post belongs to the authenticated user
-        if ($post->user_id !== $request->user()->id) {
-            return response()->json([
-                'message' => 'Unauthorized'
-            ], 403);
-        }
-
-        return response()->json([
-            'post' => $post->load('user')
-        ]);
+        $this->authorize('view', $post);
+        $post->load('user:id,name');
+        return $this->successResponse("Post retrieved successfully", $post);
     }
 
     /**
-     * Update the specified post.
+     * Update a post.
+     * @param Request $request
+     * @param Post $post
+     * @response array{
+     *  "status": boolean,
+     *  "message": "Post updated successfully",
+     *   "data": Post
+     * }
+     * @return JsonResponse
      */
     public function update(Request $request, Post $post): JsonResponse
     {
-        // Check if the post belongs to the authenticated user
-        if ($post->user_id !== $request->user()->id) {
-            return response()->json([
-                'message' => 'Unauthorized'
-            ], 403);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'title' => 'sometimes|required|string|max:255',
-            'body' => 'sometimes|required|string',
+        $this->authorize('update', $post);
+        
+        $request->validate([
+            'title' => 'sometimes|string|max:255',
+            'body' => 'sometimes|string',
         ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $post->update($request->only(['title', 'body']));
-
-        return response()->json([
-            'message' => 'Post updated successfully',
-            'post' => $post->load('user')
-        ]);
+       try {
+           DB::beginTransaction();
+           $data = $request->only(['title', 'body']);
+           $updatedPost = $this->postService->updatePost($post, $data);
+           DB::commit();
+           return $this->successResponse('Post updated successfully', $updatedPost);
+       } catch (Exception $e) {
+           DB::rollBack();
+           Log::error('Post update error: ' . $e->getMessage());
+           return $this->errorResponse('Failed to update post', 500);
+       }
     }
 
     /**
-     * Remove the specified post.
+     * Delete the specified post.
+     * @param Post $post
+     * @response array{
+     *  "status": boolean,
+     *  "message": "Post deleted successfully",
+     *   "data": []
+     * }
+     * @return JsonResponse
      */
-    public function destroy(Request $request, Post $post): JsonResponse
+    public function destroy(Post $post): JsonResponse
     {
-        // Check if the post belongs to the authenticated user
-        if ($post->user_id !== $request->user()->id) {
-            return response()->json([
-                'message' => 'Unauthorized'
-            ], 403);
-        }
-
+        $this->authorize('delete', $post);
+        
         $post->delete();
 
-        return response()->json([
-            'message' => 'Post deleted successfully'
-        ]);
+        return $this->successResponse('Post deleted successfully', []);
     }
 }

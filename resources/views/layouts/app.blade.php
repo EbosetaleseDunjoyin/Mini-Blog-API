@@ -67,7 +67,7 @@
         
         .btn {
             background: #2563eb;
-            color: white;
+            color: white !important;
             padding: 0.5rem 1rem;
             border: none;
             border-radius: 4px;
@@ -79,6 +79,7 @@
         
         .btn:hover {
             background: #1d4ed8;
+            color: #2563eb !important;
         }
         
         .btn-danger {
@@ -199,23 +200,25 @@
             border-color: #2563eb;
         }
     </style>
+    
+    <!-- CSRF Token for JavaScript -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+       
 </head>
 <body>
     <header>
         <nav>
             <a href="{{ route('blog.index') }}" class="logo">Mini Blog</a>
             <div class="nav-links">
-                @auth
+                <div class="auth">
                     <a href="{{ route('dashboard') }}">Dashboard</a>
                     <a href="{{ route('blog.create') }}">Write Post</a>
-                    <form action="{{ route('logout') }}" method="POST" style="display: inline;">
-                        @csrf
-                        <button type="submit" class="btn btn-secondary">Logout</button>
-                    </form>
-                @else
+                    <button type="button" class="btn btn-secondary" onclick="handleLogout()">Logout</button>
+                </div>
+                <div class="guest">
                     <a href="{{ route('login') }}">Login</a>
                     <a href="{{ route('register') }}" class="btn">Register</a>
-                @endauth
+                </div>
             </div>
         </nav>
     </header>
@@ -227,5 +230,6 @@
 
         @yield('content')
     </main>
+    <script src="{{ asset('assets/main.js') }}"></script>
 </body>
 </html>

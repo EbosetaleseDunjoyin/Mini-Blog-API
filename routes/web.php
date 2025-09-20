@@ -1,25 +1,25 @@
 <?php
 
+use Dedoc\Scramble\Scramble;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\BlogController;
+use App\Http\Controllers\PageController;
 
 // Public blog routes
-Route::get('/', [BlogController::class, 'index'])->name('blog.index');
-Route::get('/post/{post}', [BlogController::class, 'show'])->name('blog.show');
+Route::get('/', [PageController::class, 'index'])->name('blog.index');
+Route::get('/post/{post}', [PageController::class, 'show'])->name('blog.show');
 
 // Authentication routes
-Route::get('/login', [BlogController::class, 'loginForm'])->name('login');
-Route::post('/login', [BlogController::class, 'login']);
-Route::get('/register', [BlogController::class, 'registerForm'])->name('register');
-Route::post('/register', [BlogController::class, 'register']);
-Route::post('/logout', [BlogController::class, 'logout'])->name('logout');
+Route::get('/login', [PageController::class, 'loginForm'])->name('login');
+Route::get('/register', [PageController::class, 'registerForm'])->name('register');
+
 
 // Protected routes
-Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [BlogController::class, 'dashboard'])->name('dashboard');
-    Route::get('/create', [BlogController::class, 'createForm'])->name('blog.create');
-    Route::post('/posts', [BlogController::class, 'store'])->name('blog.store');
-    Route::get('/posts/{post}/edit', [BlogController::class, 'editForm'])->name('blog.edit');
-    Route::put('/posts/{post}', [BlogController::class, 'update'])->name('blog.update');
-    Route::delete('/posts/{post}', [BlogController::class, 'destroy'])->name('blog.destroy');
-});
+
+Route::get('/dashboard', [PageController::class, 'dashboard'])->name('dashboard');
+Route::get('/create', [PageController::class, 'createForm'])->name('blog.create');
+Route::get('/posts/{post}/edit', [PageController::class, 'editForm'])->name('blog.edit');
+
+
+
+Scramble::registerUiRoute(path: 'docs/api/v1', api: 'v1');
+Scramble::registerJsonSpecificationRoute(path: 'docs/api_v1.json', api: 'v1');

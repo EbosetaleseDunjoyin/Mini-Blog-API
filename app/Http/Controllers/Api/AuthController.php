@@ -2,104 +2,111 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Traits\ApiResponder;
 use Illuminate\Http\Request;
+use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    use ApiResponder;
+
+    public function __construct(
+        private  AuthService $authService
+    )
+    {
+
+    }
     /**
      * Register a new user
+     * @unauthenticated
+     * @param  Request $request
+     * @return JsonResponse
      */
     public function register(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
+       $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6|confirmed',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
+        try{
+            DB::beginTransaction();
+            $user = $this->authService->createUser($request->only(['name', 'email', 'password']));
+            $token = $user->createToken('miniblogapi')->plainTextToken;
+            DB::commit();
+            return $this->successResponse("Registration successful", [
+                'token' => $token,
+                'user' => $user,
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Registration error: ' . $e->getMessage());
+            return $this->errorResponse('Registration failed', 500);
         }
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'User registered successfully',
-            'user' => $user,
-            'token' => $token,
-            'token_type' => 'Bearer',
-        ], 201);
     }
 
+       
     /**
-     * Login user and create token
+     * Login
+     * 
+     * @unauthenticated
+     * @param  Request $request
+     * @return JsonResponse
      */
     public function login(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
             'password' => 'required',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
+        $user = $this->authService->verifyCredentials($request->email, $request->password);
+
+        if (!$user) {
+            return $this->errorResponse('Invalid credentials', 401);
         }
 
-        $user = User::where('email', $request->email)->first();
+        $token = $user->createToken('miniblogapi')->plainTextToken;
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'message' => 'Invalid credentials'
-            ], 401);
-        }
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'Login successful',
-            'user' => $user,
+        return $this->successResponse('Login successful', [
             'token' => $token,
-            'token_type' => 'Bearer',
+            'user' => $user,
         ]);
     }
 
+
     /**
-     * Logout the user (Revoke the token)
+     * Logout
+     * 
+     * @param Request $request
+     * @return JsonResponse
      */
     public function logout(Request $request): JsonResponse
     {
         $request->user()->tokens()->delete();
-
-        return response()->json([
-            'message' => 'Logged out successfully'
-        ]);
+        return $this->successResponse('Logout successful', [], 200);
     }
 
     /**
      * Get the authenticated User
+     * @param Request $request
+     * @return JsonResponse
      */
     public function me(Request $request): JsonResponse
     {
-        return response()->json([
+        return $this->successResponse('User retrieved successfully', [
             'user' => $request->user()
         ]);
+        
     }
 }

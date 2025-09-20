@@ -27,34 +27,13 @@ class PostFactory extends Factory
     /**
      * Create a post with a specific user.
      */
-    public function forUser(\App\Models\User $user): static
+    public function forUser(User $user): static
     {
         return $this->state(fn (array $attributes) => [
             'user_id' => $user->id,
         ]);
     }
 
-    /**
-     * Create a post about Laravel.
-     */
-    public function aboutLaravel(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'title' => 'Learning Laravel: ' . fake()->sentence(3),
-            'body' => "Laravel has been an incredible journey for me. The framework provides so many powerful features out of the box, including:\n\n- Eloquent ORM for database interactions\n- Blade templating engine\n- Artisan command line tool\n- Built-in authentication\n- And much more!\n\n" . fake()->paragraphs(rand(2, 4), true),
-        ]);
-    }
-
-    /**
-     * Create a welcome post.
-     */
-    public function welcomePost(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'title' => 'Welcome to My Blog',
-            'body' => "Hello everyone! Welcome to my new blog. I'm excited to share my thoughts and experiences with you all.\n\nThis is my first post, and I hope you'll find the content interesting and engaging. I plan to write about technology, life experiences, and various topics that interest me.\n\nStay tuned for more posts!",
-        ]);
-    }
 
     /**
      * Create a tech-related post.
