@@ -25,7 +25,7 @@ class PostController extends Controller
     }
 
      /**
-     * Display a listing of all posts (public access).
+     * Display all posts (public access).
      * @unauthenticated
      * @param Request $request
      * @response array{
@@ -84,7 +84,7 @@ class PostController extends Controller
     }
 
     /**
-     * Store a post.
+     * Create a post.
      * @param Request $request
      * @response array{
      *  "status": boolean,

@@ -156,17 +156,17 @@ POST /api/v1/auth/logout      # User logout (protected)
 ```http
 GET /api/v1/public/posts                    # Get all posts (with pagination)
 GET /api/v1/public/posts/{id}               # Get specific post
-GET /api/v1/public/posts?q=keyword   # Search posts
+GET /api/v1/public/posts?search=keyword   # Search posts
 ```
 
 ### Protected Endpoints (Require Authentication)
 
 ```http
-GET    /api/v1/posts           # Get user's posts
-POST   /api/v1/posts           # Create new post
-GET    /api/v1/posts/{id}      # Get user's specific post
-PUT    /api/v1/posts/{id}      # Update user's post
-DELETE /api/v1/posts/{id}      # Delete user's post
+GET    /api/v1/posts                    # Get user's posts
+GET    /api/v1/posts?search=keyword     # Search user's posts
+POST   /api/v1/posts                    # Create new post
+PUT    /api/v1/posts/{id}               # Update user's post
+DELETE /api/v1/posts/{id}               # Delete user's post
 ```
 
 ### Auto-Generated Documentation
